@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-from infrastructure import factory
-from infrastructure import logger
-import common
+from infrabbitmq import factory
+from infcommon import logger
 import os
 
 parser = argparse.ArgumentParser()

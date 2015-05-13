@@ -4,14 +4,45 @@ import importlib
 import os
 import sys
 import argparse
-from infrastructure import (
+from infcommon import logger
+from infrabbitmq import (
     factory,
-    logger as infrastructure_logger,
     rabbitmq,
-    utils,
-    serializers,
-    serializers2,
+    jsonserializer,
 )
+
+
+
+
+import time
+import datetime
+
+MIN_SLEEP_TIME = 0.2
+MAX_RECONNECTION_TIME = 10
+SUCESSFUL_RECONNECTION_TIME = 1
+
+
+def do_stuff_with_exponential_backoff(exceptions, stuff_func, *args, **kwargs):
+
+    def _sleep_for_reconnect(try_num):
+        reconnect_sleep_time = min(MAX_RECONNECTION_TIME, (try_num**2)*MIN_SLEEP_TIME)
+        logger.info("Waiting for reconnect try {} sleeping {}s".format(try_num, reconnect_sleep_time))
+        time.sleep(reconnect_sleep_time)
+
+    try_num = 1
+    while True:
+        try:
+            t1 = datetime.datetime.now()
+            return stuff_func(*args, **kwargs)
+        except exceptions:
+            logger.error("Error performing stuff", exc_info=True)
+            if datetime.datetime.now() - t1 > datetime.timedelta(seconds=SUCESSFUL_RECONNECTION_TIME):
+                try_num = 1
+            else:
+                try_num += 1
+            _sleep_for_reconnect(try_num)
+
+
 
 
 MIN_SLEEP_TIME = 0.2
@@ -50,7 +81,7 @@ class LogProcessor(object):
         self._processor = processor
 
     def process(self, event):
-        infrastructure_logger.debug("Processor {} processing {}".format(self._processor.__class__.__name__, event))
+        logger.debug("Processor {} processing {}".format(self._processor.__class__.__name__, event))
         self._processor.process(event)
 
 class NoopProcessor(object):
@@ -69,7 +100,7 @@ def _queue_event_processor(queue, exchange, topics, event_processor, message_ttl
 
 
 def _process_body_events(queue, exchange, topics, event_processor, message_ttl, serializer):
-    infrastructure_logger.info("Connecting")
+    logger.info("Connecting")
     _queue_event_processor(queue, exchange, topics, event_processor, message_ttl, serializer).process_body()
 
 
@@ -80,33 +111,24 @@ def main():
     parser.add_argument('-q', '--queue', action='store', required=True, help='')
     parser.add_argument('-ttl', '--message-ttl', action='store', type=int, default=None, help='In milliseconds!')
     parser.add_argument('-t', '--topics', nargs='+', action='store', required=True, help='')
-    parser.add_argument('-n', '--network', action='store', required=False, help='')
-    parser.add_argument('-ds', '--disable_serialization', default=False, action="store_true", help="Disable serialization")
-    parser.add_argument('-s', '--serialization', action="store", required=False, help="Select serialization Json, Pickle")
     args = parser.parse_args()
 
     try:
         if args.factory:
-            event_processor_class = Importer.get_symbol(args.factory)
-            event_processor = event_processor_class(args.network) if args.network else event_processor_class()
+            event_processor_symbol = Importer.get_symbol(args.factory)
+            event_processor = event_processor_symbol()
             processor_name = event_processor_name(args.factory)
         else:
             event_processor = NoopProcessor()
             processor_name = event_processor.__class__.__name__
 
-        serializer = None
-        if args.disable_serialization:
-            serializer = serializers.NullSerializer()
-        if args.serialization == 'json':
-            serializer = serializers2.JsonSerializer()
-        if args.serialization == 'pickle':
-            serializer = serializers2.PickleSerializer()
+        serializer = factory.json_serializer()
 
-        infrastructure_logger.info("(%d) Starting event_processor %s" % (os.getpid(), processor_name))
-        infrastructure_logger.info("%s queue %s topics %s" % (processor_name, args.queue, args.topics))
-        infrastructure_logger.info("%s deserializer %s" % (processor_name, serializer))
+        logger.info("(%d) Starting event_processor %s" % (os.getpid(), processor_name))
+        logger.info("%s queue %s topics %s" % (processor_name, args.queue, args.topics))
+        logger.info("%s deserializer %s" % (processor_name, serializer))
 
-        utils.do_stuff_with_exponential_backoff((rabbitmq.RabbitMQError,),
+        do_stuff_with_exponential_backoff((rabbitmq.RabbitMQError,),
             _process_body_events,
             args.queue,
             args.exchange,
@@ -115,7 +137,7 @@ def main():
             args.message_ttl,
             serializer)
     except Exception as exc:
-        infrastructure_logger.error('Uncontrolled exception: {exc}'.format(exc=exc), exc_info=True)
+        logger.error('Uncontrolled exception: {exc}'.format(exc=exc), exc_info=True)
         sys.exit(-1)
 
 
