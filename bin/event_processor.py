@@ -4,7 +4,7 @@ import importlib
 import os
 import sys
 import argparse
-from infcommon import logger
+from infcommon import logger, utils
 from infrabbitmq import (
     factory,
     rabbitmq,
@@ -12,41 +12,9 @@ from infrabbitmq import (
 )
 
 
-
-
 import time
 import datetime
 
-MIN_SLEEP_TIME = 0.2
-MAX_RECONNECTION_TIME = 10
-SUCESSFUL_RECONNECTION_TIME = 1
-
-
-def do_stuff_with_exponential_backoff(exceptions, stuff_func, *args, **kwargs):
-
-    def _sleep_for_reconnect(try_num):
-        reconnect_sleep_time = min(MAX_RECONNECTION_TIME, (try_num**2)*MIN_SLEEP_TIME)
-        logger.info("Waiting for reconnect try {} sleeping {}s".format(try_num, reconnect_sleep_time))
-        time.sleep(reconnect_sleep_time)
-
-    try_num = 1
-    while True:
-        try:
-            t1 = datetime.datetime.now()
-            return stuff_func(*args, **kwargs)
-        except exceptions:
-            logger.error("Error performing stuff", exc_info=True)
-            if datetime.datetime.now() - t1 > datetime.timedelta(seconds=SUCESSFUL_RECONNECTION_TIME):
-                try_num = 1
-            else:
-                try_num += 1
-            _sleep_for_reconnect(try_num)
-
-
-
-
-MIN_SLEEP_TIME = 0.2
-MAX_RECONNECTION_TIME = 20
 
 class Importer(object):
 
@@ -128,7 +96,7 @@ def main():
         logger.info("%s queue %s topics %s" % (processor_name, args.queue, args.topics))
         logger.info("%s deserializer %s" % (processor_name, serializer))
 
-        do_stuff_with_exponential_backoff((rabbitmq.RabbitMQError,),
+        utils.do_stuff_with_exponential_backoff((rabbitmq.RabbitMQError,),
             _process_body_events,
             args.queue,
             args.exchange,
