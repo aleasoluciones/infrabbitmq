@@ -32,7 +32,7 @@ class RabbitMQQueueEventProcessorTest(unittest.TestCase):
 
         assert_that(self.processor.process, called().with_args(instance_of(events.Event)).times(2))
 
-    def Xtest_process_body_events_from_multiple_topics(self):
+    def test_process_body_events_from_multiple_topics(self):
         queue_event_processor = self._queue_event_processor_with_topics('*.kern.critical', '*.hdd.info')
 
         self.event_publisher.publish('kern.critical', IRRELEVANT_NETWORK, data={})
@@ -42,7 +42,7 @@ class RabbitMQQueueEventProcessorTest(unittest.TestCase):
 
         assert_that(self.processor.process, called().with_args(instance_of(events.Event)).times(2))
 
-    def Xtest_process_body_events_per_queue_message_ttl(self):
+    def test_process_body_events_per_queue_message_ttl(self):
         queue_event_processor = self._queue_event_processor_with_topics('#', message_ttl=1000)
 
         self.event_publisher.publish('kern.critical', IRRELEVANT_NETWORK, data={})
