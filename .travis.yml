@@ -1,0 +1,20 @@
+language: python
+python:
+  - 2.7
+  - 3.3
+  - 3.4
+  - pypy
+
+services:
+  - rabbitmq
+
+env:
+  - BROKER_URI=amqp://guest:guest@localhost/
+
+install:
+  - python setup.py develop
+  - pip install -r requirements.txt
+  - pip install -r requirements-dev.txt
+
+script:
+  - nosetests tests integration_tests
