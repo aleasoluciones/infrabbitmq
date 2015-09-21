@@ -2,9 +2,10 @@
 
 from __future__ import absolute_import
 
+import logging
 import os
 import infcommon
-from infcommon import clock, logger
+from infcommon import clock
 from infrabbitmq import (
     events,
     jsonserializer,
@@ -28,7 +29,7 @@ def rabbitmq_queue_event_processor(queue_name, exchange, topics, event_processor
     return rabbitmq.RabbitMQQueueEventProcessor(queue_name,
                                                 event_processor,
                                                 rabbitmq_client(serializer=serializer),
-                                                exception_publisher=logger,
+                                                exception_publisher=logging,
                                                 exchange=exchange,
                                                 topics=topics,
                                                 message_ttl=message_ttl)

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import logging
 import importlib
 import os
 import sys
 import argparse
-from infcommon import logger, utils
+from infcommon import utils
 from infrabbitmq import (
     factory,
     rabbitmq,
@@ -49,7 +50,7 @@ class LogProcessor(object):
         self._processor = processor
 
     def process(self, event):
-        logger.debug("Processor {} processing {}".format(self._processor.__class__.__name__, event))
+        logging.debug("Processor {} processing {}".format(self._processor.__class__.__name__, event))
         self._processor.process(event)
 
 class NoopProcessor(object):
@@ -68,7 +69,7 @@ def _queue_event_processor(queue, exchange, topics, event_processor, message_ttl
 
 
 def _process_body_events(queue, exchange, topics, event_processor, message_ttl, serializer):
-    logger.info("Connecting")
+    logging.info("Connecting")
     _queue_event_processor(queue, exchange, topics, event_processor, message_ttl, serializer).process_body()
 
 
@@ -92,9 +93,9 @@ def main():
 
         serializer = factory.json_serializer()
 
-        logger.info("(%d) Starting event_processor %s" % (os.getpid(), processor_name))
-        logger.info("%s queue %s topics %s" % (processor_name, args.queue, args.topics))
-        logger.info("%s deserializer %s" % (processor_name, serializer))
+        logging.info("(%d) Starting event_processor %s" % (os.getpid(), processor_name))
+        logging.info("%s queue %s topics %s" % (processor_name, args.queue, args.topics))
+        logging.info("%s deserializer %s" % (processor_name, serializer))
 
         utils.do_stuff_with_exponential_backoff((rabbitmq.RabbitMQError,),
             _process_body_events,
@@ -105,7 +106,7 @@ def main():
             args.message_ttl,
             serializer)
     except Exception as exc:
-        logger.error('Uncontrolled exception: {exc}'.format(exc=exc), exc_info=True)
+        logging.error('Uncontrolled exception: {exc}'.format(exc=exc), exc_info=True)
         sys.exit(-1)
 
 

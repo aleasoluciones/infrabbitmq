@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import logging
 from functools import wraps
 import socket, select, errno
 import puka
-from infcommon import logger
 from infrabbitmq import events
 
 DIRECT = 'direct'
@@ -43,7 +43,7 @@ class RabbitMQClient(object):
             except (puka.NotFound) as exc:
                 raise RabbitMQNotFoundError(exc)
             except (socket.error, puka.AMQPError) as exc:
-                logger.info("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
+                logging.info("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
                 self._client = None
                 raise RabbitMQError(exc)
         return wrapper
@@ -151,11 +151,11 @@ class RabbitMQClient(object):
                 except select.error as exc:
                     # http://stackoverflow.com/questions/5633067/signal-handling-in-pylons
                     if exc[0] != errno.EINTR:
-                        logger.info("Interrupted System Call")
+                        logging.info("Interrupted System Call")
         except (puka.NotFound) as exc:
             raise RabbitMQNotFoundError(exc)
         except (socket.error, puka.AMQPError) as exc:
-            logger.error("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
+            logging.error("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
             self._client = None
             raise RabbitMQError(exc)
 
@@ -190,7 +190,7 @@ class RabbitMQQueueIterator(object):
             message['body'] = self.deserialize_func(message['body'])
             return RabbitMQMessage(message)
         except Exception as exc:
-            logger.error("Error consuming from %s %s %s" % (self.queue, type(exc), exc), exc_info=True)
+            logging.error("Error consuming from %s %s %s" % (self.queue, type(exc), exc), exc_info=True)
             return self.next()
 
 
@@ -268,7 +268,7 @@ class RabbitMQQueueEventProcessor(object):
                     try:
                         self.processor.process(events.Event(**message.body))
                     except Exception:
-                        logger.error("Error processing {message} with exception".format(message=message.body), exc_info=True)
+                        logging.error("Error processing {message} with exception".format(message=message.body), exc_info=True)
                 if max_iterations and index >= max_iterations:
                     return
 
