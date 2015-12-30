@@ -225,12 +225,11 @@ class RabbitMQMessage(object):
 
 class RabbitMQQueueEventProcessor(object):
 
-    def __init__(self, queue, processor, rabbitmq_client, exception_publisher, **amqp_options):
+    def __init__(self, queue, processor, rabbitmq_client, **amqp_options):
         self.queue = queue
         self.processor = processor
         self.rabbitmq_client = rabbitmq_client
         self.amqp_options = amqp_options
-        self.exception_publisher = exception_publisher
         self._declare_recurses()
 
     def _declare_recurses(self):

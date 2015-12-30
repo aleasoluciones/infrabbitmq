@@ -29,7 +29,6 @@ def rabbitmq_queue_event_processor(queue_name, exchange, topics, event_processor
     return rabbitmq.RabbitMQQueueEventProcessor(queue_name,
                                                 event_processor,
                                                 rabbitmq_client(serializer=serializer),
-                                                exception_publisher=logging,
                                                 exchange=exchange,
                                                 topics=topics,
                                                 message_ttl=message_ttl)
