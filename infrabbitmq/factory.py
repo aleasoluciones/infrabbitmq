@@ -25,13 +25,26 @@ def event_publisher(exchange='events', broker_uri=None):
     )
 
 
-def rabbitmq_queue_event_processor(queue_name, exchange, topics, event_processor, message_ttl, serializer=None):
+def rabbitmq_queue_event_processor(queue_name, exchange, topics, event_processor, message_ttl, serializer=None, event_builder=None):
+    if event_builder is None:
+        event_builder = felix_event_builder
+
     return rabbitmq.RabbitMQQueueEventProcessor(queue_name,
                                                 event_processor,
                                                 rabbitmq_client(serializer=serializer),
+                                                event_builder,
                                                 exchange=exchange,
                                                 topics=topics,
                                                 message_ttl=message_ttl)
+
+
+def felix_event_builder(raw_event):
+    return events.Event(**raw_event)
+
+
+def raw_event_builder(raw_event):
+    return raw_event
+
 
 def rabbitmq_client(broker_uri=None, serializer=None):
     broker_uri = broker_uri or os.environ['BROKER_URI']

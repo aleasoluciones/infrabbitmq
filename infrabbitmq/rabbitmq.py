@@ -225,10 +225,11 @@ class RabbitMQMessage(object):
 
 class RabbitMQQueueEventProcessor(object):
 
-    def __init__(self, queue, processor, rabbitmq_client, **amqp_options):
+    def __init__(self, queue, processor, rabbitmq_client, event_builder, **amqp_options):
         self.queue = queue
         self.processor = processor
         self.rabbitmq_client = rabbitmq_client
+        self.event_builder = event_builder
         self.amqp_options = amqp_options
         self._declare_recurses()
 
@@ -265,7 +266,7 @@ class RabbitMQQueueEventProcessor(object):
             for index, message in enumerate(self.rabbitmq_client.consume_next(queue=self.queue, timeout=1)):
                 if message is not None:
                     try:
-                        self.processor.process(events.Event(**message.body))
+                        self.processor.process(self.event_builder(message.body))
                     except Exception:
                         logging.error("Error processing {message} with exception".format(message=message.body), exc_info=True)
                 if max_iterations and index >= max_iterations:

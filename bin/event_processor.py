@@ -58,24 +58,26 @@ class NoopProcessor(object):
         pass
 
 
-def _queue_event_processor(queue, exchange, topics, event_processor, message_ttl, serializer):
+def _queue_event_processor(queue, exchange, topics, event_processor, message_ttl, serializer, event_builder):
     return factory.rabbitmq_queue_event_processor(
         queue,
         exchange,
         topics,
         event_processor,
         message_ttl,
-        serializer)
+        serializer,
+        event_builder)
 
 
-def _process_body_events(queue, exchange, topics, event_processor, message_ttl, serializer):
+def _process_body_events(queue, exchange, topics, event_processor, message_ttl, serializer, event_builder):
     logging.info("Connecting")
-    _queue_event_processor(queue, exchange, topics, event_processor, message_ttl, serializer).process_body()
+    _queue_event_processor(queue, exchange, topics, event_processor, message_ttl, serializer, event_builder).process_body()
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--factory', action='store', required=False, help='')
+    parser.add_argument('-b', '--event-builder', action='store', required=False, default='infrabbitmq.factory.felix_event_builder', help='Python function to build an event object')
     parser.add_argument('-e', '--exchange', action='store', required=True, help='')
     parser.add_argument('-q', '--queue', action='store', required=True, help='')
     parser.add_argument('-ttl', '--message-ttl', action='store', type=int, default=None, help='In milliseconds!')
@@ -92,6 +94,7 @@ def main():
             processor_name = event_processor.__class__.__name__
 
         serializer = factory.json_serializer()
+        event_builder = Importer.get_symbol(args.event_builder)
 
         logging.info("(%d) Starting event_processor %s" % (os.getpid(), processor_name))
         logging.info("%s queue %s topics %s" % (processor_name, args.queue, args.topics))
@@ -104,7 +107,8 @@ def main():
             args.topics,
             LogProcessor(event_processor),
             args.message_ttl,
-            serializer)
+            serializer,
+            event_builder)
     except Exception as exc:
         logging.error('Uncontrolled exception: {exc}'.format(exc=exc), exc_info=True)
         sys.exit(-1)

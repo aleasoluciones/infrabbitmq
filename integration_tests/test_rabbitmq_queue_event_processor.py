@@ -52,6 +52,17 @@ class RabbitMQQueueEventProcessorTest(unittest.TestCase):
 
         assert_that(self.processor.process, never(called()))
 
+    def test_process_body_events_with_raw_event_builder_calls_processor_with_dict(self):
+        queue_event_processor = factory.rabbitmq_queue_event_processor(
+            self.queue, self.exchange, ['#'], self.processor, message_ttl=None,
+            serializer=None, event_builder=factory.raw_event_builder)
+
+        self.event_publisher.publish('kern.critical', IRRELEVANT_NETWORK, data={})
+
+        queue_event_processor.process_body(max_iterations=1)
+
+        assert_that(self.processor.process, called().with_args(instance_of(dict)).times(1))
+
     def _queue_event_processor_with_topics(self, *topics, **kwargs):
         return factory.rabbitmq_queue_event_processor(self.queue, self.exchange, topics, self.processor,
             kwargs.get('message_ttl'))
