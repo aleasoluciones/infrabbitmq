@@ -6,7 +6,7 @@ import datetime
 from hamcrest import *
 from doublex import *
 
-from infrabbitmq import jsonserializer, events
+from infrabbitmq import serializers, events
 
 IRRELEVANT_DATA = {
     'name': 'event name',
@@ -16,7 +16,7 @@ IRRELEVANT_DATA = {
 
 class TestJsonSerializer(object):
     def setUp(self):
-        self.serializer = jsonserializer.JsonSerializer()
+        self.serializer = serializers.JsonSerializer()
 
     def test_serializes_to_json(self):
         serialized = self.serializer.dumps(IRRELEVANT_DATA)

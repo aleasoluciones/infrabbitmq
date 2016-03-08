@@ -5,7 +5,7 @@ from hamcrest import *
 from doublex import *
 import os
 
-from infrabbitmq import rabbitmq, jsonserializer
+from infrabbitmq import rabbitmq, serializers
 
 IRRELEVANT_QUEUE1 = 'irrelevant_queue1'
 IRRELEVANT_QUEUE2 = 'irrelevant_queue2'
@@ -28,7 +28,7 @@ class RabbitMQClientTest(unittest.TestCase):
 
     def setUp(self):
         self.broker_uri = os.environ['BROKER_URI']
-        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=jsonserializer.JsonSerializer())
+        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=serializers.JsonSerializer())
         self.rabbitmq_client.exchange_declare(exchange=IRRELEVANT_EXCHANGE1, type=rabbitmq.DIRECT)
         self.rabbitmq_client.queue_declare(IRRELEVANT_QUEUE1, auto_delete=False)
         self.rabbitmq_client.queue_bind(IRRELEVANT_QUEUE1, IRRELEVANT_EXCHANGE1, routing_key=IRRELEVANT_ROUTING_KEY)
@@ -80,7 +80,7 @@ class RabbitMQClientTopicsTest(unittest.TestCase):
 
     def setUp(self):
         self.broker_uri = os.environ['BROKER_URI']
-        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=jsonserializer.JsonSerializer())
+        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=serializers.JsonSerializer())
         self.rabbitmq_client.exchange_declare(IRRELEVANT_EXCHANGE2, type=rabbitmq.TOPIC)
         self.rabbitmq_client.queue_declare(queue=self._queue_name, auto_delete=False)
 
@@ -124,7 +124,7 @@ class RabbitMQClientMultipleBindingsTestX(unittest.TestCase):
 
     def setUp(self):
         self.broker_uri = os.environ['BROKER_URI']
-        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=jsonserializer.JsonSerializer())
+        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=serializers.JsonSerializer())
         self.rabbitmq_client.exchange_declare(exchange=IRRELEVANT_EXCHANGE3, type=rabbitmq.TOPIC)
         self.rabbitmq_client.queue_declare(queue=IRRELEVANT_QUEUE3, auto_delete=False)
 
@@ -147,7 +147,7 @@ class RabbitMQClientErrorTestX(unittest.TestCase):
 
     def setUp(self):
         self.broker_uri = os.environ['BROKER_URI']
-        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=jsonserializer.JsonSerializer())
+        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=serializers.JsonSerializer())
 
     def test_raise_error_when_publish_to_undeclared_exchange(self):
         self.assertRaises(rabbitmq.RabbitMQNotFoundError,
@@ -160,7 +160,7 @@ class RabbitMQClientErrorTestX(unittest.TestCase):
 
     def test_raise_error_trying_to_declare_a_exchange_and_the_connection_is_not_allowed(self):
         self.broker_uri = 'rabbitmq://WRONGUSER:WRONGPASSWD@localhost:5672/'
-        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=jsonserializer.JsonSerializer())
+        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=serializers.JsonSerializer())
         self.assertRaises(rabbitmq.RabbitMQError,
                 self.rabbitmq_client.exchange_declare,
                 exchange=IRRELEVANT_EXCHANGE1, type=rabbitmq.DIRECT)

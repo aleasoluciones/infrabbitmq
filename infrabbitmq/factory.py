@@ -8,13 +8,22 @@ import infcommon
 from infcommon import clock
 from infrabbitmq import (
     events,
-    jsonserializer,
+    serializers,
     rabbitmq,
 )
 
 
 def json_serializer():
-    return infcommon.Factory.instance('json_serializer', lambda: jsonserializer.JsonSerializer())
+    return infcommon.Factory.instance('json_serializer', lambda: serializers.JsonSerializer())
+
+
+def pickle_serializer():
+    return infcommon.Factory.instance('pickle_serializer', lambda: serializers.PickleSerializer())
+
+
+def json_or_pickle_serializer():
+    return infcommon.Factory.instance('json_or_pickle_serializer', lambda: serializers.JsonOrPickleSerializer())
+
 
 def event_publisher(exchange='events', broker_uri=None):
     return infcommon.Factory.instance('event_publisher_%s_%s' % (exchange, broker_uri),
@@ -28,6 +37,9 @@ def event_publisher(exchange='events', broker_uri=None):
 def rabbitmq_queue_event_processor(queue_name, exchange, topics, processor, serializer=None, queue_options=None, exchange_options=None, event_builder=None):
     if event_builder is None:
         event_builder = felix_event_builder
+
+    if serializer is None:
+        serializer = json_or_pickle_serializer()
 
     return rabbitmq.RabbitMQQueueEventProcessor(queue_name=queue_name,
                                                 processor=processor,
@@ -50,6 +62,5 @@ def raw_event_builder(raw_event):
 
 def rabbitmq_client(broker_uri=None, serializer=None):
     broker_uri = broker_uri or os.environ['BROKER_URI']
-    serializer = json_serializer()
+    serializer = serializer or json_serializer()
     return rabbitmq.RabbitMQClient(broker_uri, serializer)
-
