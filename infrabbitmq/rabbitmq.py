@@ -225,13 +225,17 @@ class RabbitMQMessage(object):
 
 class RabbitMQQueueEventProcessor(object):
 
-    def __init__(self, queue, processor, rabbitmq_client, event_builder, **amqp_options):
-        self.queue = queue
+    def __init__(self, queue_name, processor, rabbitmq_client, exchange, topics, exchange_options, queue_options, event_builder):
+        self.queue_name = queue_name
         self.processor = processor
         self.rabbitmq_client = rabbitmq_client
+        self.topics = topics
+        self.exchange = exchange
+        self.exchange_options = exchange_options
+        self.queue_options = queue_options
         self.event_builder = event_builder
-        self.amqp_options = amqp_options
-        self._declare_recurses()
+        if len(self.queue_name) > 0:
+            self._declare_recurses()
 
     def _declare_recurses(self):
         self._declare_exchange()
@@ -244,26 +248,27 @@ class RabbitMQQueueEventProcessor(object):
 
 
     def _declare_exchange(self):
-        self.rabbitmq_client.exchange_declare(self.amqp_options['exchange'],
+        self.rabbitmq_client.exchange_declare(self.exchange,
                                               TOPIC,
-                                              durable=self.amqp_options.get('durable', True),
-                                              auto_delete=self.amqp_options.get('auto_delete', False))
+                                              durable=self.exchange_options.get('durable', True),
+                                              auto_delete=self.exchange_options.get('auto_delete', False))
 
     def _declare_queue(self):
-        self.rabbitmq_client.queue_declare(queue=self.queue, durable=True,
-                                           auto_delete=self.amqp_options.get('auto_delete', False),
-                                           message_ttl=self.amqp_options.get('message_ttl'))
+        self.rabbitmq_client.queue_declare(queue=self.queue_name,
+                                           durable=self.queue_options.get('durable', True),
+                                           auto_delete=self.queue_options.get('auto_delete', False),
+                                           message_ttl=self.queue_options.get('message_ttl'))
 
     def _bind_queue_to_topics(self):
-        for topic in self.amqp_options['topics']:
-            self.rabbitmq_client.queue_bind(queue=self.queue,
-                                            exchange=self.amqp_options['exchange'],
+        for topic in self.topics:
+            self.rabbitmq_client.queue_bind(queue=self.queue_name,
+                                            exchange=self.exchange,
                                             routing_key=topic)
 
     def process_body(self, max_iterations=None):
         self._connection_setup()
         while True:
-            for index, message in enumerate(self.rabbitmq_client.consume_next(queue=self.queue, timeout=1)):
+            for index, message in enumerate(self.rabbitmq_client.consume_next(queue=self.queue_name, timeout=1)):
                 if message is not None:
                     try:
                         self.processor.process(self.event_builder(message.body))
