@@ -2,6 +2,7 @@
 
 import json
 import datetime
+import cPickle as pickle
 
 
 class JsonSerializer(object):
