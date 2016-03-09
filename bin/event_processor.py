@@ -70,6 +70,14 @@ def _process_body_events(queue, exchange, topics, event_processor, message_ttl, 
     _queue_event_processor(queue, exchange, topics, event_processor, message_ttl, serializer, event_builder).process_body()
 
 
+def _configure_sentry(self):
+    sentry_conf = {
+                'level': 'ERROR',
+                'class': 'raven.handlers.logging.SentryHandler',
+                'dsn': os.getenv('SENTRY_DSN')
+    }
+    logging_utils.add_handler('sentry', sentry_conf)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--factory', action='store', required=False, help='')
@@ -81,6 +89,8 @@ def main():
     parser.add_argument('-n', '--network', action='store', required=False, help='')
     parser.add_argument('-s', '--serialization', action="store", required=False, help="Select serialization Json, Pickle")
     args = parser.parse_args()
+
+    _configure_sentry()
 
     try:
         if args.factory:
