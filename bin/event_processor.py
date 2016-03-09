@@ -70,7 +70,7 @@ def _process_body_events(queue, exchange, topics, event_processor, message_ttl, 
     _queue_event_processor(queue, exchange, topics, event_processor, message_ttl, serializer, event_builder).process_body()
 
 
-def _configure_sentry(self):
+def _configure_sentry():
     sentry_conf = {
                 'level': 'ERROR',
                 'class': 'raven.handlers.logging.SentryHandler',
