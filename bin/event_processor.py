@@ -72,7 +72,7 @@ def _process_body_events(queue, exchange, topics, event_processor, message_ttl, 
 
 def _configure_sentry():
     sentry_conf = {
-                'level': 'ERROR',
+                'level': 'CRITICAL',
                 'class': 'raven.handlers.logging.SentryHandler',
                 'dsn': os.getenv('SENTRY_DSN')
     }
