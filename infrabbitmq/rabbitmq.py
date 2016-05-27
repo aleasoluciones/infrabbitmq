@@ -155,7 +155,7 @@ class RabbitMQClient(object):
         except (puka.NotFound) as exc:
             raise RabbitMQNotFoundError(exc)
         except (socket.error, puka.AMQPError) as exc:
-            logging.error("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
+            logging.critical("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
             self._client = None
             raise RabbitMQError(exc)
 
@@ -190,7 +190,7 @@ class RabbitMQQueueIterator(object):
             message['body'] = self.deserialize_func(message['body'])
             return RabbitMQMessage(message)
         except Exception as exc:
-            logging.error("Error consuming from %s %s %s" % (self.queue, type(exc), exc), exc_info=True)
+            logging.critical("Error consuming from %s %s %s" % (self.queue, type(exc), exc), exc_info=True)
             return self.next()
 
 
@@ -273,7 +273,7 @@ class RabbitMQQueueEventProcessor(object):
                     try:
                         self.processor.process(self.event_builder(message.body))
                     except Exception:
-                        logging.error("Error processing {message} with exception".format(message=message.body), exc_info=True)
+                        logging.critical("Error processing {message} with exception".format(message=message.body), exc_info=True)
                 if max_iterations and index >= max_iterations:
                     return
 

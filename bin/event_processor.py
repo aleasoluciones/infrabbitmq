@@ -123,7 +123,7 @@ def main():
             serializer,
             event_builder)
     except Exception as exc:
-        logging.error('Uncontrolled exception: {exc}'.format(exc=exc), exc_info=True)
+        logging.critical('Uncontrolled exception: {exc}'.format(exc=exc), exc_info=True)
         sys.exit(-1)
 
 
