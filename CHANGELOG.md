@@ -1,4 +1,4 @@
-2016-05-xx
+2016-05-29
 ==========
 * Internal: use CRITICAL logging level instead of ERROR for Sentry and change Sentry level to CRITICAL.
 
