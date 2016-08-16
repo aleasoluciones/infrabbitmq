@@ -1,2 +1,2 @@
 puka==0.0.6
--e git+https://github.com/aleasoluciones/infcommon.git@870549d17e60cc0b7149011e8628c30d8cad4be8#egg=infcommon
+-e git+https://github.com/aleasoluciones/infcommon.git@ffe5ec43e4b93e5da3a19688c68e7a3d90a019fc#egg=infcommon
