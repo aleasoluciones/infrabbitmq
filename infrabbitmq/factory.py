@@ -33,6 +33,14 @@ def event_publisher(exchange='events', broker_uri=None):
             exchange=exchange)
     )
 
+def event_publisher_pickle_serializer(exchange='events', broker_uri=None):
+    return infcommon.Factory.instance('event_publisher_pickle_serializer_%s_%s' % (exchange, broker_uri),
+        lambda: rabbitmq.EventPublisher(
+            rabbitmq_client(broker_uri=broker_uri, serializer=pickle_serializer()),
+            clock.Clock(),
+            exchange=exchange)
+    )
+
 
 def rabbitmq_queue_event_processor(queue_name, exchange, topics, processor, serializer=None, queue_options=None, exchange_options=None, event_builder=None):
     if event_builder is None:
