@@ -295,7 +295,7 @@ class EventPublisher(object):
     def publish_with_ttl(self, event_name, network, ttl, data=None, id=None, topic_prefix=None):
         message_header = {'expiration': str(ttl)}
         now = self.clock.now()
-        event = Event(event_name, network, data, self.clock.timestamp(now), id, topic_prefix, timestamp_str=str(now))
+        event = events.Event(event_name, network, data, self.clock.timestamp(now), id, topic_prefix, timestamp_str=str(now))
         self.rabbitmq_client.exchange_declare(exchange=self.exchange, type=TOPIC, durable=True)
         self.rabbitmq_client.publish(exchange=self.exchange,
                                      routing_key=event.topic,
