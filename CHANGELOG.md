@@ -1,4 +1,8 @@
-2016-08-XX
+2017-01-11
+==========
+* Internal: use Python 3 compatible print()
+
+2016-08-16
 ==========
 * Update infcommon dependency version
 
