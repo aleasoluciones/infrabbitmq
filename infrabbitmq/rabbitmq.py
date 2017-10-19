@@ -114,6 +114,20 @@ class RabbitMQClient(object):
     def _connect(self):
         self._client = puka.Client(self.broker_uri)
         promise = self.client.connect()
+        # ---------------------
+        # TCP_KEEPIDLE (since Linux 2.4)
+        # The  time  (in  seconds)  the connection needs to remain idle before TCP starts sending keepalive probes, if the socket option SO_KEEPALIVE has been set on this socket.
+        #  This option should not be used in code intended to be portable.
+        self._client.sd.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 7)
+
+        # TCP_KEEPINTVL (since Linux 2.4)
+        # The time (in seconds) between individual keepalive probes.  This option should not be used in code intended to be portable.
+        self._client.sd.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 3)
+
+        # TCP_KEEPCNT (since Linux 2.4)
+        # The maximum number of keepalive probes TCP should send before dropping the connection.  This option should not be used in code intended to be portable.
+        self._client.sd.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 13)
+        # ---------------------
         self.client.wait(promise)
 
     @raise_rabbitmq_error
