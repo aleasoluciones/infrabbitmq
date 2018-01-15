@@ -1,3 +1,7 @@
+2018-01-15
+==========
+* Internal: Updated setup_venv.sh to upgrade always
+
 2017-01-11
 ==========
 * Internal: use Python 3 compatible print()
