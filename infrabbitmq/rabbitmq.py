@@ -279,7 +279,8 @@ class RabbitMQQueueEventProcessor(object):
                     try:
                         self.processor.process(self.event_builder(message.body))
                     except Exception:
-                        logging.critical("Error processing {message} with exception".format(message=message.body), exc_info=True)
+                        logging.critical("Error processing {processor} {message} with exception".format(processor=self.processor._processor.__class__, message=message.body), exc_info=True)
+
                 if max_iterations and index >= max_iterations:
                     return
 
