@@ -7,4 +7,4 @@ else
 	# Linux or MacOsx docker-machine stoped
 	export DOCKER_HOST_IP=127.0.0.1
 fi
-export BROKER_URI=amqp://felix:felix@$DOCKER_HOST_IP/
+export BROKER_URI=amqp://infrabbit:infrabbit@$DOCKER_HOST_IP/
