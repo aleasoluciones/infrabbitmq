@@ -42,7 +42,7 @@ def event_publisher_pickle_serializer(exchange='events', broker_uri=None):
     )
 
 
-def rabbitmq_queue_event_processor(queue_name, exchange, topics, processor, serializer=None, queue_options=None, exchange_options=None, event_builder=None):
+def rabbitmq_queue_event_processor(queue_name, exchange, topics, processor, serializer=None, queue_options=None, exchange_options=None, event_builder=None, exchange_type=rabbitmq.TOPIC):
     if event_builder is None:
         event_builder = felix_event_builder
 
@@ -56,7 +56,8 @@ def rabbitmq_queue_event_processor(queue_name, exchange, topics, processor, seri
                                                 topics=topics,
                                                 exchange_options=exchange_options or {},
                                                 queue_options=queue_options or {},
-                                                event_builder=event_builder)
+                                                event_builder=event_builder,
+                                                exchange_type=exchange_type)
 
 
 
