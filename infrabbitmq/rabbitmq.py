@@ -58,7 +58,7 @@ class RabbitMQClient(object):
 
     @raise_rabbitmq_error
     def exchange_declare(self, exchange, type, **kwargs):
-        if type is X_DELAYED:
+        if type == X_DELAYED:
             kwargs['arguments'] = {'x-delayed-type': 'topic'}
         promise = self.client.exchange_declare(exchange=exchange, type=type, **kwargs)
         self.client.wait(promise)
