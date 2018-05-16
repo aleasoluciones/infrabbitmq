@@ -30,7 +30,7 @@ class FakeEvent(object):
     def topic(self):
         return self._topic
 
-class RabbitMQEventPublisherWithDelayMessagesTest(unittest.TestCase):
+class RabbitMQQueueObjetEventProcessorTest(unittest.TestCase):
 
     def setUp(self):
         self.exchange = 'IRRELEVANT_EX_%s' % os.getpid()
@@ -39,7 +39,7 @@ class RabbitMQEventPublisherWithDelayMessagesTest(unittest.TestCase):
         self.event_publisher = factory.event_publisher(self.exchange)
         self.processor = Spy()
 
-    def test_process_delayed_event(self):
+    def test_process_event_object(self):
         event = FakeEvent(TOPIC, NETWORK, DATA)
         queue_event_processor = factory.rabbitmq_queue_event_processor(self.queue, self.exchange, '#', self.processor, event_builder=factory.raw_event_builder)
 
@@ -47,7 +47,8 @@ class RabbitMQEventPublisherWithDelayMessagesTest(unittest.TestCase):
 
         queue_event_processor.process_body(max_iterations=1)
 
-        assert_that(self.processor.process, called().times(1))
+        assert_that(self.processor.process, called().with_args(instance_of(dict)).times(1))
+        assert_that(self.processor.process, called().with_args(has_value(DATA)).times(1))
 
     def tearDown(self):
         self._delete_resources()
