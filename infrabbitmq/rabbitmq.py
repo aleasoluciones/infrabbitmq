@@ -293,10 +293,7 @@ class EventPublisher(object):
     def publish(self, event_name, network, data=None, id=None, topic_prefix=None):
         now = self.clock.now()
         event = events.Event(event_name, network, data, self.clock.timestamp(now), id, topic_prefix, timestamp_str=str(now))
-        self.rabbitmq_client.exchange_declare(exchange=self.exchange, type=TOPIC, durable=True)
-        self.rabbitmq_client.publish(exchange=self.exchange,
-                                     routing_key=event.topic,
-                                     message=event)
+        self.publish_event_object(event)
 
     def publish_event_object(self, event):
 	now = self.clock.now()
