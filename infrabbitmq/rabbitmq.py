@@ -237,7 +237,7 @@ class RabbitMQQueueEventProcessor(object):
         self.exchange_options = exchange_options
         self.queue_options = queue_options
         self.event_builder = event_builder
-	self.exchange_type = exchange_type
+        self.exchange_type = exchange_type
         if len(self.queue_name) > 0:
             self._declare_recurses()
 
@@ -296,8 +296,8 @@ class EventPublisher(object):
         self.publish_event_object(event)
 
     def publish_event_object(self, event):
-	now = self.clock.now()
-	event.timestamp = self.clock.timestamp(now)
+        now = self.clock.now()
+        event.timestamp = self.clock.timestamp(now)
         self.rabbitmq_client.exchange_declare(exchange=self.exchange, type=TOPIC, durable=True)
         self.rabbitmq_client.publish(exchange=self.exchange,
                                      routing_key=event.topic,
@@ -314,11 +314,11 @@ class EventPublisher(object):
                                      headers=message_header)
 
     def publish_with_delay(self, event_name, network, delay=0, data=None, id=None, topic_prefix=None):
-	message_header = {'x-delay': str(delay)}
-	now = self.clock.now()
-	event = events.Event(event_name, network, data, self.clock.timestamp(now), id, topic_prefix, timestamp_str=str(now))
-	self.rabbitmq_client.exchange_declare(exchange=self.exchange, type=X_DELAYED, durable=True, arguments={'x-delayed-type': 'topic'})
-	self.rabbitmq_client.publish(exchange=self.exchange,
+        message_header = {'x-delay': str(delay)}
+        now = self.clock.now()
+        event = events.Event(event_name, network, data, self.clock.timestamp(now), id, topic_prefix, timestamp_str=str(now))
+        self.rabbitmq_client.exchange_declare(exchange=self.exchange, type=X_DELAYED, durable=True, arguments={'x-delayed-type': 'topic'})
+        self.rabbitmq_client.publish(exchange=self.exchange,
                                      routing_key=event.topic,
                                      message=event,
                                      headers=message_header)
