@@ -43,12 +43,11 @@ def event_publisher_pickle_serializer(exchange='events', broker_uri=None):
 
 
 def event_publisher_json_serializer(exchange='events', broker_uri=None):
-    return infcommon.Factory.instance('event_publisher_json_serializer{}_{}'.format(exchange, broker_uri)),
-        lambda: rabbitmq.EventPublisher(
-            rabbitmq_client(broker_uri=broker_uri, serializer=json_serializer()),
-            clock.Clock(),
-            exchange=exchange)
-    )
+    return infcommon.Factory.instance('event_publisher_json_serializer{}_{}'.format(exchange, broker_uri),
+                                      lambda: rabbitmq.EventPublisher(rabbitmq_client(broker_uri=broker_uri, serializer=json_serializer()),
+                                                                      clock.Clock(),
+                                                                      exchange=exchange)
+                                     )
 
 
 def rabbitmq_queue_event_processor(queue_name, exchange, topics, processor, serializer=None, queue_options=None, exchange_options=None, event_builder=None, exchange_type=rabbitmq.TOPIC):
