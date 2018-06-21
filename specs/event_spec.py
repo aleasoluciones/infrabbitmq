@@ -9,8 +9,6 @@ NETWORK = 'irrelevant-network'
 NAME = 'irrelevant-name'
 
 with description('Event test'):
-    with before.each:
-         pass
     with context('when creating an event'):
         with context('when specifing a prefix'):
             with it('returns the topic with the specified prefix'):
