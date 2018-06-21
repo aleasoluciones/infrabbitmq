@@ -8,6 +8,7 @@ from infrabbitmq import events
 
 DIRECT = 'direct'
 TOPIC = 'topic'
+X_DELAYED = 'x-delayed-message'
 
 # AMQP topics
 # * (star) can substitute for exactly one word.
@@ -57,6 +58,8 @@ class RabbitMQClient(object):
 
     @raise_rabbitmq_error
     def exchange_declare(self, exchange, type, **kwargs):
+        if type == X_DELAYED:
+            kwargs['arguments'] = {'x-delayed-type': 'topic'}
         promise = self.client.exchange_declare(exchange=exchange, type=type, **kwargs)
         self.client.wait(promise)
 
@@ -225,7 +228,7 @@ class RabbitMQMessage(object):
 
 class RabbitMQQueueEventProcessor(object):
 
-    def __init__(self, queue_name, processor, rabbitmq_client, exchange, topics, exchange_options, queue_options, event_builder):
+    def __init__(self, queue_name, processor, rabbitmq_client, exchange, topics, exchange_options, queue_options, event_builder, exchange_type=TOPIC):
         self.queue_name = queue_name
         self.processor = processor
         self.rabbitmq_client = rabbitmq_client
@@ -234,6 +237,7 @@ class RabbitMQQueueEventProcessor(object):
         self.exchange_options = exchange_options
         self.queue_options = queue_options
         self.event_builder = event_builder
+	self.exchange_type = exchange_type
         if len(self.queue_name) > 0:
             self._declare_recurses()
 
@@ -248,10 +252,12 @@ class RabbitMQQueueEventProcessor(object):
 
 
     def _declare_exchange(self):
+        arguments = {'x-delayed-type': 'topic'} if self.exchange_type is X_DELAYED else {}
         self.rabbitmq_client.exchange_declare(self.exchange,
-                                              TOPIC,
+                                              self.exchange_type,
                                               durable=self.exchange_options.get('durable', True),
-                                              auto_delete=self.exchange_options.get('auto_delete', False))
+                                              auto_delete=self.exchange_options.get('auto_delete', False),
+                                              arguments=arguments)
 
     def _declare_queue(self):
         self.rabbitmq_client.queue_declare(queue=self.queue_name,
@@ -287,6 +293,11 @@ class EventPublisher(object):
     def publish(self, event_name, network, data=None, id=None, topic_prefix=None):
         now = self.clock.now()
         event = events.Event(event_name, network, data, self.clock.timestamp(now), id, topic_prefix, timestamp_str=str(now))
+        self.publish_event_object(event)
+
+    def publish_event_object(self, event):
+	now = self.clock.now()
+	event.timestamp = self.clock.timestamp(now)
         self.rabbitmq_client.exchange_declare(exchange=self.exchange, type=TOPIC, durable=True)
         self.rabbitmq_client.publish(exchange=self.exchange,
                                      routing_key=event.topic,
@@ -302,5 +313,12 @@ class EventPublisher(object):
                                      message=event,
                                      headers=message_header)
 
-
-
+    def publish_with_delay(self, event_name, network, delay=0, data=None, id=None, topic_prefix=None):
+	message_header = {'x-delay': str(delay)}
+	now = self.clock.now()
+	event = events.Event(event_name, network, data, self.clock.timestamp(now), id, topic_prefix, timestamp_str=str(now))
+	self.rabbitmq_client.exchange_declare(exchange=self.exchange, type=X_DELAYED, durable=True, arguments={'x-delayed-type': 'topic'})
+	self.rabbitmq_client.publish(exchange=self.exchange,
+                                     routing_key=event.topic,
+                                     message=event,
+                                     headers=message_header)

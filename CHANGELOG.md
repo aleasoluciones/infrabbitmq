@@ -1,3 +1,8 @@
+2018-05-11
+==========
+* publish_with_delay method added
+* exchange declaration allows x-delayed-message
+
 2018-01-15
 ==========
 * Internal: Updated setup_venv.sh to upgrade always
