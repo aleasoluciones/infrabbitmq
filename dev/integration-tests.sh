@@ -21,6 +21,7 @@ echo "----------------------------------------------------------------------"
 echo
 nosetests $INTEGRATION_TESTS -s --logging-clear-handlers --processes=16 --process-timeout=50
 NOSE_RETCODE=$?
+mamba -f documentation $INTEGRATION_TESTS
 
 RETCODE=$NOSE_RETCODE
 sleep 1
