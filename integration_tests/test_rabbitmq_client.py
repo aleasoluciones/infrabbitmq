@@ -37,27 +37,7 @@ class RabbitMQClientTest(unittest.TestCase):
         self.rabbitmq_client.queue_delete(queue=IRRELEVANT_QUEUE1)
         self.rabbitmq_client.exchange_delete(exchange=IRRELEVANT_EXCHANGE1)
 
-    def test_direct_publish_and_consuming(self):
-        self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE)
 
-        assert_that(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1).body, is_(IRRELEVANT_MESSAGE))
-        assert_that(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1), is_(None))
-
-    def test_iterate_over_all_pending_messages(self):
-        self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE1)
-        self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE2)
-
-        expected_results = [IRRELEVANT_MESSAGE1, IRRELEVANT_MESSAGE2]
-        for index,response in enumerate(self.rabbitmq_client.consume_pending(queue=IRRELEVANT_QUEUE1)):
-            assert_that(response.body, is_(expected_results[index]))
-
-    def test_consuming_all_pending_messages(self):
-        self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE1)
-        self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE2)
-
-        assert_that(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1).body, is_(IRRELEVANT_MESSAGE1))
-        assert_that(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1).body, is_(IRRELEVANT_MESSAGE2))
-        assert_that(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1), is_(None))
 
     def test_consuming_all_pending_messages_using_consuming_next(self):
         self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE1)

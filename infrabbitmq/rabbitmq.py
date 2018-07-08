@@ -3,8 +3,7 @@
 import logging
 from functools import wraps
 import socket, select, errno
-import puka
-from infrabbitmq import events
+from infrabbitmq import events, client_wrapper
 
 DIRECT = 'direct'
 TOPIC = 'topic'
@@ -41,9 +40,11 @@ class RabbitMQClient(object):
         def wrapper(self, *args, **kwargs):
             try:
                 return func(self, *args, **kwargs)
-            except (puka.NotFound) as exc:
-                raise RabbitMQNotFoundError(exc)
-            except (socket.error, puka.AMQPError) as exc:
+            except Exception as exc:
+                pass
+            #except (puka.NotFound) as exc:
+            #    raise RabbitMQNotFoundError(exc)
+            except (socket.error, pika.exceptions.AMQPError) as exc:
                 logging.info("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
                 self._client = None
                 raise RabbitMQError(exc)
@@ -51,59 +52,49 @@ class RabbitMQClient(object):
 
     @raise_rabbitmq_error
     def publish(self, exchange, routing_key, message, **kwargs):
-        promise = self.client.basic_publish(exchange=exchange, routing_key=routing_key,
+        self.client.basic_publish(exchange=exchange, routing_key=routing_key,
                     body=self._serialize(message), **kwargs)
-        self.client.wait(promise)
         return
 
     @raise_rabbitmq_error
     def exchange_declare(self, exchange, type, **kwargs):
         if type == X_DELAYED:
             kwargs['arguments'] = {'x-delayed-type': 'topic'}
-        promise = self.client.exchange_declare(exchange=exchange, type=type, **kwargs)
-        self.client.wait(promise)
+        self.client.exchange_declare(exchange=exchange, type=type, **kwargs)
 
     @raise_rabbitmq_error
     def exchange_delete(self, exchange):
-        promise = self.client.exchange_delete(exchange=exchange)
-        self.client.wait(promise)
+        self.client.exchange_delete(exchange=exchange)
 
     @raise_rabbitmq_error
     def queue_declare(self, queue, auto_delete=True, exclusive=False, durable=False, message_ttl=None):
         arguments = {}
         if message_ttl is not None:
             arguments['x-message-ttl'] = message_ttl
-        promise = self.client.queue_declare(queue=queue, auto_delete=auto_delete, exclusive=exclusive, durable=durable, arguments=arguments)
-        self.client.wait(promise)
+        self.client.queue_declare(queue=queue, auto_delete=auto_delete, exclusive=exclusive, durable=durable, arguments=arguments)
 
     @raise_rabbitmq_error
     def queue_bind(self, queue, exchange, routing_key=''):
-        promise = self.client.queue_bind(queue=queue, exchange=exchange, routing_key=routing_key)
-        self.client.wait(promise)
+        self.client.queue_bind(queue=queue, exchange=exchange, routing_key=routing_key)
 
     @raise_rabbitmq_error
     def queue_unbind(self, queue, exchange, routing_key=''):
-        promise = self.client.queue_unbind(queue=queue, exchange=exchange, routing_key=routing_key)
-        self.client.wait(promise)
+        self.client.queue_unbind(queue=queue, exchange=exchange, routing_key=routing_key)
 
     @raise_rabbitmq_error
     def queue_delete(self, queue):
-        promise = self.client.queue_delete(queue=queue)
-        self.client.wait(promise)
+        self.client.queue_delete(queue=queue)
 
     @raise_rabbitmq_error
     def consume(self, queue, timeout=1):
-        consume_promise = self.client.basic_consume(queue=queue, prefetch_count=1)
-        message = self.client.wait(consume_promise, timeout=timeout)
+        message = self.client.start_consume(queue=queue, timeout=timeout)
         if message is not None:
-            self.client.basic_ack(message)
             message['body'] = self._deserialize(message['body'])
             message = RabbitMQMessage(message)
-        self._consume_cancel_and_disconnect(consume_promise)
+        self.disconnect()
         return message
 
     def _consume_cancel_and_disconnect(self, consume_promise):
-        self._basic_cancel(consume_promise)
         self.disconnect()
 
     def _basic_cancel(self, consume_promise):
@@ -111,13 +102,11 @@ class RabbitMQClient(object):
 
     @raise_rabbitmq_error
     def purge(self, queue):
-        promise = self.client.queue_purge(queue)
-        self.client.wait(promise)
+        self.client.queue_purge(queue)
 
     def _connect(self):
-        self._client = puka.Client(self.broker_uri)
-        promise = self.client.connect()
-        self.client.wait(promise)
+        self._client = client_wrapper.ClientWrapper(self.broker_uri)
+        self._client.connect(self.broker_uri)
 
     @raise_rabbitmq_error
     def connect(self):
@@ -127,7 +116,7 @@ class RabbitMQClient(object):
     @raise_rabbitmq_error
     def disconnect(self):
         try:
-            self.client.wait(self.client.close())
+            self.client.disconnect()
         except Exception:
             pass
         finally:
@@ -155,12 +144,14 @@ class RabbitMQClient(object):
                     # http://stackoverflow.com/questions/5633067/signal-handling-in-pylons
                     if exc[0] != errno.EINTR:
                         logging.info("Interrupted System Call")
-        except (puka.NotFound) as exc:
-            raise RabbitMQNotFoundError(exc)
-        except (socket.error, puka.AMQPError) as exc:
-            logging.critical("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
-            self._client = None
-            raise RabbitMQError(exc)
+        except Exception as exc:
+            pass
+        #except (puka.NotFound) as exc:
+        #    raise RabbitMQNotFoundError(exc)
+        #except (socket.error, puka.AMQPError) as exc:
+        #    logging.critical("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
+        #    self._client = None
+        #    raise RabbitMQError(exc)
 
 
     @raise_rabbitmq_error
@@ -237,7 +228,7 @@ class RabbitMQQueueEventProcessor(object):
         self.exchange_options = exchange_options
         self.queue_options = queue_options
         self.event_builder = event_builder
-	self.exchange_type = exchange_type
+        self.exchange_type = exchange_type
         if len(self.queue_name) > 0:
             self._declare_recurses()
 
@@ -296,8 +287,8 @@ class EventPublisher(object):
         self.publish_event_object(event)
 
     def publish_event_object(self, event):
-	now = self.clock.now()
-	event.timestamp = self.clock.timestamp(now)
+        now = self.clock.now()
+        event.timestamp = self.clock.timestamp(now)
         self.rabbitmq_client.exchange_declare(exchange=self.exchange, type=TOPIC, durable=True)
         self.rabbitmq_client.publish(exchange=self.exchange,
                                      routing_key=event.topic,
@@ -314,11 +305,11 @@ class EventPublisher(object):
                                      headers=message_header)
 
     def publish_with_delay(self, event_name, network, delay=0, data=None, id=None, topic_prefix=None):
-	message_header = {'x-delay': str(delay)}
-	now = self.clock.now()
-	event = events.Event(event_name, network, data, self.clock.timestamp(now), id, topic_prefix, timestamp_str=str(now))
-	self.rabbitmq_client.exchange_declare(exchange=self.exchange, type=X_DELAYED, durable=True, arguments={'x-delayed-type': 'topic'})
-	self.rabbitmq_client.publish(exchange=self.exchange,
+        message_header = {'x-delay': str(delay)}
+        now = self.clock.now()
+        event = events.Event(event_name, network, data, self.clock.timestamp(now), id, topic_prefix, timestamp_str=str(now))
+        self.rabbitmq_client.exchange_declare(exchange=self.exchange, type=X_DELAYED, durable=True, arguments={'x-delayed-type': 'topic'})
+        self.rabbitmq_client.publish(exchange=self.exchange,
                                      routing_key=event.topic,
                                      message=event,
                                      headers=message_header)
