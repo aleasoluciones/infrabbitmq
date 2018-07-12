@@ -45,7 +45,7 @@ with describe('Rabbitmq client specs'):
             expect(msg.body).to(equal(IRRELEVANT_MESSAGE))
             expect(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1)).to(be_none)
 
-    with _context('when publishing more than one direct messages'):
+    with context('when publishing more than one direct messages'):
         with it('consumes all pending messages iterating over them'):
             self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE1)
             self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE2)

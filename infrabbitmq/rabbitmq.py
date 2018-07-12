@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import pika
 import logging
 from functools import wraps
 import socket, select, errno
@@ -130,12 +131,10 @@ class RabbitMQClient(object):
 
     def consume_next(self, queue, timeout=1):
         try:
-            consume_promise = self.client.basic_consume(queue=queue, prefetch_count=1)
             while True:
                 try:
-                    message = self.client.wait(consume_promise, timeout=timeout)
+                    message = self.client.start_consume(queue=queue, timeout=timeout)
                     if message:
-                        self.client.basic_ack(message)
                         message['body'] = self._deserialize(message['body'])
                         yield RabbitMQMessage(message)
                     else:
@@ -144,14 +143,14 @@ class RabbitMQClient(object):
                     # http://stackoverflow.com/questions/5633067/signal-handling-in-pylons
                     if exc[0] != errno.EINTR:
                         logging.info("Interrupted System Call")
-        except Exception as exc:
+        except (pika.exceptions.ChannelClosed) as exc:
+            raise RabbitMQNotFoundError(exc)
+        except (socket.error, pika.exceptions.AMQPError) as exc:
+            logging.critical("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
+            self._client = None
+            raise RabbitMQError(exc)
+        except TypeError:
             pass
-        #except (puka.NotFound) as exc:
-        #    raise RabbitMQNotFoundError(exc)
-        #except (socket.error, puka.AMQPError) as exc:
-        #    logging.critical("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
-        #    self._client = None
-        #    raise RabbitMQError(exc)
 
 
     @raise_rabbitmq_error
@@ -166,26 +165,27 @@ class RabbitMQQueueIterator(object):
         self.client = client
         self.timeout = timeout
         self.deserialize_func = deserialize_func
-        self._consume_promise = self.client.basic_consume(queue=self.queue, prefetch_count=1)
 
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         try:
-            message = self.client.wait(self._consume_promise, timeout=self.timeout)
-            if message is None:
-                self.client.wait(self.client.basic_cancel(self._consume_promise))
-                raise StopIteration()
-            self.client.basic_ack(message)
-        except puka.AMQPError as exc:
+            message = self.client.start_consume(queue=self.queue, timeout=self.timeout)
+        except pika.exceptions.AMQPError as exc:
             raise RabbitMQError(exc)
+        except TypeError:
+            self._finish()
         try:
             message['body'] = self.deserialize_func(message['body'])
             return RabbitMQMessage(message)
         except Exception as exc:
             logging.critical("Error consuming from %s %s %s" % (self.queue, type(exc), exc), exc_info=True)
-            return self.next()
+            return self.__next__()
+
+    def _finish(self):
+        self.client.disconnect()
+        raise StopIteration()
 
 
 class RabbitMQMessage(object):

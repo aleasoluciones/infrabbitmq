@@ -33,7 +33,6 @@ class ClientWrapper(object):
             msg_body['body'] = body.decode('utf-8')
             self._channel.basic_ack(method_frame.delivery_tag)
             break
-
         return msg_body
 
     def queue_bind(self, queue, exchange, routing_key=''):
