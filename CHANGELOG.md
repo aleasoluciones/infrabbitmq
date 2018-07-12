@@ -1,3 +1,7 @@
+2018-05-29
+==========
+* [Internal] Update factory with a new function to create event_publisher_json_serializer
+
 2018-05-11
 ==========
 * publish_with_delay method added
