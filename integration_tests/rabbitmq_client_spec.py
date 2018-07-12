@@ -79,7 +79,7 @@ with describe('Rabbitmq client specs'):
             self.rabbitmq_client.purge(queue=IRRELEVANT_QUEUE1)
             expect(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1)).to(be_none)
 
-with describe('Rabbitmq client specs'):
+with describe('Rabbitmq client topic specs'):
     with before.each:
         self.broker_uri = os.environ['BROKER_URI']
         self._queue_name = 'test_q_{}'.format(os.getpid())
@@ -91,26 +91,25 @@ with describe('Rabbitmq client specs'):
         self.rabbitmq_client.queue_delete(queue=self._queue_name)
         self.rabbitmq_client.exchange_delete(exchange=IRRELEVANT_EXCHANGE2)
 
-    with fcontext('client topic'):
-        with context('when topic is #'):
-            with it('consumes all messages'):
-                _bind_queue_to_topic(self.rabbitmq_client, self._queue_name,'#')
+    with context('when topic is #'):
+        with it('consumes all messages'):
+            _bind_queue_to_topic(self.rabbitmq_client, self._queue_name,'#')
 
-                _publish_on_topic(self.rabbitmq_client, "kernel.critical", IRRELEVANT_MESSAGE1)
-                _publish_on_topic(self.rabbitmq_client, "mail.critical.info", IRRELEVANT_MESSAGE2)
+            _publish_on_topic(self.rabbitmq_client, "kernel.critical", IRRELEVANT_MESSAGE1)
+            _publish_on_topic(self.rabbitmq_client, "mail.critical.info", IRRELEVANT_MESSAGE2)
 
-                _assert_received_message_is(self.rabbitmq_client, self._queue_name, IRRELEVANT_MESSAGE1)
-                _assert_received_message_is(self.rabbitmq_client, self._queue_name, IRRELEVANT_MESSAGE2)
+            _assert_received_message_is(self.rabbitmq_client, self._queue_name, IRRELEVANT_MESSAGE1)
+            _assert_received_message_is(self.rabbitmq_client, self._queue_name, IRRELEVANT_MESSAGE2)
 
-        with context('when topic is kernel.#'):
-            with it('consumes kernel messages'):
-                _bind_queue_to_topic(self.rabbitmq_client, self._queue_name,'kernel.#')
+    with context('when topic is kernel.#'):
+        with it('consumes kernel messages'):
+            _bind_queue_to_topic(self.rabbitmq_client, self._queue_name,'kernel.#')
 
-                _publish_on_topic(self.rabbitmq_client, "kernel.critical", IRRELEVANT_MESSAGE1)
-                _publish_on_topic(self.rabbitmq_client, "mail.critical.info", IRRELEVANT_MESSAGE2)
+            _publish_on_topic(self.rabbitmq_client, "kernel.critical", IRRELEVANT_MESSAGE1)
+            _publish_on_topic(self.rabbitmq_client, "mail.critical.info", IRRELEVANT_MESSAGE2)
 
-                _assert_received_message_is(self.rabbitmq_client, self._queue_name, IRRELEVANT_MESSAGE1)
-                expect(self.rabbitmq_client.consume(queue=self._queue_name)).to(be_none)
+            _assert_received_message_is(self.rabbitmq_client, self._queue_name, IRRELEVANT_MESSAGE1)
+            expect(self.rabbitmq_client.consume(queue=self._queue_name)).to(be_none)
 
 def _bind_queue_to_topic(client, queue, topic):
     client.queue_bind(queue=queue, exchange=IRRELEVANT_EXCHANGE2, routing_key=topic)
@@ -121,3 +120,24 @@ def _assert_received_message_is(client, queue, message):
 def _publish_on_topic(client, topic, message=IRRELEVANT_MESSAGE):
     client.publish(exchange=IRRELEVANT_EXCHANGE2, routing_key=topic, message=message)
 
+with describe('Rabbitmq client multiple binding specs'):
+    with before.each:
+        self.broker_uri = os.environ['BROKER_URI']
+        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=serializers.JsonSerializer())
+        self.rabbitmq_client.exchange_declare(IRRELEVANT_EXCHANGE3, type=rabbitmq.TOPIC)
+        self.rabbitmq_client.queue_declare(queue=IRRELEVANT_QUEUE3, auto_delete=False)
+
+    with after.each:
+        self.rabbitmq_client.queue_delete(queue=IRRELEVANT_QUEUE3)
+        self.rabbitmq_client.exchange_delete(exchange=IRRELEVANT_EXCHANGE3)
+
+    with fcontext('when receiving from 2 routing keys'):
+        with it('consumes all messages'):
+            self.rabbitmq_client.queue_bind(queue=IRRELEVANT_QUEUE3, exchange=IRRELEVANT_EXCHANGE3, routing_key=IRRELEVANT_ROUTING_KEY1)
+            self.rabbitmq_client.queue_bind(queue=IRRELEVANT_QUEUE3, exchange=IRRELEVANT_EXCHANGE3, routing_key=IRRELEVANT_ROUTING_KEY2)
+
+            self.rabbitmq_client.publish(exchange=IRRELEVANT_EXCHANGE3, routing_key=IRRELEVANT_ROUTING_KEY1, message=IRRELEVANT_MESSAGE1)
+            self.rabbitmq_client.publish(exchange=IRRELEVANT_EXCHANGE3, routing_key=IRRELEVANT_ROUTING_KEY2, message=IRRELEVANT_MESSAGE2)
+
+            expect(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE3).body).to(equal(IRRELEVANT_MESSAGE1))
+            expect(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE3).body).to(equal(IRRELEVANT_MESSAGE2))

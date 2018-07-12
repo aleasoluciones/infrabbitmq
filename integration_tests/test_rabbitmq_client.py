@@ -24,28 +24,6 @@ IRRELEVANT_MESSAGE1 = 'irrelevant_message1'
 IRRELEVANT_MESSAGE2 = 'irrelevant_message2'
 
 
-class RabbitMQClientMultipleBindingsTestX(unittest.TestCase):
-
-    def setUp(self):
-        self.broker_uri = os.environ['BROKER_URI']
-        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=serializers.JsonSerializer())
-        self.rabbitmq_client.exchange_declare(exchange=IRRELEVANT_EXCHANGE3, type=rabbitmq.TOPIC)
-        self.rabbitmq_client.queue_declare(queue=IRRELEVANT_QUEUE3, auto_delete=False)
-
-    def tearDown(self):
-        self.rabbitmq_client.queue_delete(queue=IRRELEVANT_QUEUE3)
-        self.rabbitmq_client.exchange_delete(exchange=IRRELEVANT_EXCHANGE3)
-
-    def test_receive_from_two_routing_keys(self):
-        self.rabbitmq_client.queue_bind(queue=IRRELEVANT_QUEUE3, exchange=IRRELEVANT_EXCHANGE3, routing_key=IRRELEVANT_ROUTING_KEY1)
-        self.rabbitmq_client.queue_bind(queue=IRRELEVANT_QUEUE3, exchange=IRRELEVANT_EXCHANGE3, routing_key=IRRELEVANT_ROUTING_KEY2)
-
-        self.rabbitmq_client.publish(exchange=IRRELEVANT_EXCHANGE3, routing_key=IRRELEVANT_ROUTING_KEY1, message=IRRELEVANT_MESSAGE1)
-        self.rabbitmq_client.publish(exchange=IRRELEVANT_EXCHANGE3, routing_key=IRRELEVANT_ROUTING_KEY2, message=IRRELEVANT_MESSAGE2)
-
-        assert_that(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE3).body, is_(IRRELEVANT_MESSAGE1))
-        assert_that(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE3).body, is_(IRRELEVANT_MESSAGE2))
-
 
 class RabbitMQClientErrorTestX(unittest.TestCase):
 
