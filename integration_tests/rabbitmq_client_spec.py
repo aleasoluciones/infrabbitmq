@@ -78,3 +78,24 @@ with describe('Rabbitmq client specs'):
 
             self.rabbitmq_client.purge(queue=IRRELEVANT_QUEUE1)
             expect(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1)).to(be_none)
+
+    with fcontext('client topic'):
+        with context('when topic is #'):
+            with it('consumes all messages'):
+                #self._bind_queue_to_topic('#')
+                self.rabbitmq_client.queue_bind(queue=self._queue_name, exchange=IRRELEVANT_EXCHANGE2, routing_key=topic)
+
+                self._publish_on_topic("kern.critical", IRRELEVANT_MESSAGE1)
+                self._publish_on_topic("mail.critical.info", IRRELEVANT_MESSAGE2)
+
+                self._assert_received_message_is(IRRELEVANT_MESSAGE1)
+                self._assert_received_message_is(IRRELEVANT_MESSAGE2)
+
+        def _bind_queue_to_topic(self, topic):
+            self.rabbitmq_client.queue_bind(queue=self._queue_name, exchange=IRRELEVANT_EXCHANGE2, routing_key=topic)
+
+        def _assert_received_message_is(self, message):
+            expect(self.rabbitmq_client.consume(queue=self._queue_name).body).to(equal(message))
+
+        def _publish_on_topic(self, topic, message=IRRELEVANT_MESSAGE):
+            self.rabbitmq_client.publish(exchange=IRRELEVANT_EXCHANGE2, routing_key=topic, message=message)
