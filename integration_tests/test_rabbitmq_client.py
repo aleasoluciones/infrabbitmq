@@ -38,17 +38,6 @@ class RabbitMQClientTest(unittest.TestCase):
         self.rabbitmq_client.exchange_delete(exchange=IRRELEVANT_EXCHANGE1)
 
 
-
-    def test_consuming_all_pending_messages_using_consuming_next(self):
-        self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE1)
-        self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE2)
-
-        expected_results = [IRRELEVANT_MESSAGE1, IRRELEVANT_MESSAGE2]
-        for cont, message in enumerate(self.rabbitmq_client.consume_next(queue=IRRELEVANT_QUEUE1)):
-            assert_that(message.body, is_(expected_results[cont]))
-            if cont == (len(expected_results) -1):
-                break
-
     def test_purge(self):
         self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE)
 

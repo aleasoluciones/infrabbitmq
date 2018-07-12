@@ -41,6 +41,9 @@ class ClientWrapper(object):
     def queue_delete(self, queue):
         self._channel.queue_delete(queue)
 
+    def queue_purge(self, queue):
+        self._channel.queue_purge(queue)
+
     def exchange_delete(self, exchange):
         self._channel.exchange_delete(exchange)
 

@@ -71,3 +71,10 @@ with describe('Rabbitmq client specs'):
                 expect(message.body).to(equal(expected_results[cont]))
                 if cont == (len(expected_results) -1):
                     break
+
+    with context('when purging a queue'):
+        with it('does NOT consume any message'):
+            self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE)
+
+            self.rabbitmq_client.purge(queue=IRRELEVANT_QUEUE1)
+            expect(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1)).to(be_none)
