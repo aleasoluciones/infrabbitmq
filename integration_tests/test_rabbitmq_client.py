@@ -24,50 +24,6 @@ IRRELEVANT_MESSAGE1 = 'irrelevant_message1'
 IRRELEVANT_MESSAGE2 = 'irrelevant_message2'
 
 
-class RabbitMQClientTopicsTest(unittest.TestCase):
-
-    def setUp(self):
-        self.broker_uri = os.environ['BROKER_URI']
-        self.rabbitmq_client = rabbitmq.RabbitMQClient(self.broker_uri, serializer=serializers.JsonSerializer())
-        self.rabbitmq_client.exchange_declare(IRRELEVANT_EXCHANGE2, type=rabbitmq.TOPIC)
-        self.rabbitmq_client.queue_declare(queue=self._queue_name, auto_delete=False)
-
-    def tearDown(self):
-        self.rabbitmq_client.queue_delete(queue=self._queue_name)
-        self.rabbitmq_client.exchange_delete(exchange=IRRELEVANT_EXCHANGE2)
-
-    def test_consume_all_messages(self):
-        self._bind_queue_to_topic('#')
-
-        self._publish_on_topic("kern.critical", IRRELEVANT_MESSAGE1)
-        self._publish_on_topic("mail.critical.info", IRRELEVANT_MESSAGE2)
-
-        self._assert_received_message_is(IRRELEVANT_MESSAGE1)
-        self._assert_received_message_is(IRRELEVANT_MESSAGE2)
-
-    def test_consume_all_kernel_messages(self):
-        self._bind_queue_to_topic('kern.#')
-
-        self._publish_on_topic("kern.critical", IRRELEVANT_MESSAGE1)
-        self._publish_on_topic("mail.critical.info", IRRELEVANT_MESSAGE2)
-
-        self._assert_received_message_is(IRRELEVANT_MESSAGE1)
-        assert_that(self.rabbitmq_client.consume(queue=self._queue_name), is_(None))
-
-    def _bind_queue_to_topic(self, topic):
-        self.rabbitmq_client.queue_bind(queue=self._queue_name, exchange=IRRELEVANT_EXCHANGE2, routing_key=topic)
-
-    def _publish_on_topic(self, topic, message=IRRELEVANT_MESSAGE):
-        self.rabbitmq_client.publish(exchange=IRRELEVANT_EXCHANGE2, routing_key=topic, message=message)
-
-    def _assert_received_message_is(self, message):
-        assert_that(self.rabbitmq_client.consume(queue=self._queue_name).body, is_(message))
-
-    @property
-    def _queue_name(self):
-        return "test_q_%i" % os.getpid()
-
-
 class RabbitMQClientMultipleBindingsTestX(unittest.TestCase):
 
     def setUp(self):
