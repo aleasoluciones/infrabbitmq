@@ -41,10 +41,9 @@ class RabbitMQClient(object):
         def wrapper(self, *args, **kwargs):
             try:
                 return func(self, *args, **kwargs)
-            except Exception as exc:
-                pass
-            #except (puka.NotFound) as exc:
-            #    raise RabbitMQNotFoundError(exc)
+            except pika.exceptions.ChannelClosed as exc:
+                self._client = None
+                raise RabbitMQNotFoundError(exc)
             except (socket.error, pika.exceptions.AMQPError) as exc:
                 logging.info("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
                 self._client = None
@@ -55,7 +54,6 @@ class RabbitMQClient(object):
     def publish(self, exchange, routing_key, message, **kwargs):
         self.client.basic_publish(exchange=exchange, routing_key=routing_key,
                     body=self._serialize(message), **kwargs)
-        return
 
     @raise_rabbitmq_error
     def exchange_declare(self, exchange, type, **kwargs):
@@ -88,10 +86,12 @@ class RabbitMQClient(object):
 
     @raise_rabbitmq_error
     def consume(self, queue, timeout=1):
-        message = self.client.start_consume(queue=queue, timeout=timeout)
-        if message is not None:
+        try:
+            message = self.client.start_consume(queue=queue, timeout=timeout)
             message['body'] = self._deserialize(message['body'])
             message = RabbitMQMessage(message)
+        except TypeError:
+            message = None
         self.disconnect()
         return message
 
@@ -175,17 +175,13 @@ class RabbitMQQueueIterator(object):
         except pika.exceptions.AMQPError as exc:
             raise RabbitMQError(exc)
         except TypeError:
-            self._finish()
+            raise StopIteration()
         try:
             message['body'] = self.deserialize_func(message['body'])
             return RabbitMQMessage(message)
         except Exception as exc:
             logging.critical("Error consuming from %s %s %s" % (self.queue, type(exc), exc), exc_info=True)
             return self.__next__()
-
-    def _finish(self):
-        self.client.disconnect()
-        raise StopIteration()
 
 
 class RabbitMQMessage(object):

@@ -53,6 +53,7 @@ with describe('Rabbitmq client specs'):
             expected_results = [IRRELEVANT_MESSAGE1, IRRELEVANT_MESSAGE2]
             for index,response in enumerate(self.rabbitmq_client.consume_pending(queue=IRRELEVANT_QUEUE1)):
                 expect(response.body).to(equal(expected_results[index]))
+
         with it('consumes all pending messages'):
             self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE1)
             self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE2)
@@ -78,6 +79,31 @@ with describe('Rabbitmq client specs'):
 
             self.rabbitmq_client.purge(queue=IRRELEVANT_QUEUE1)
             expect(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1)).to(be_none)
+
+    with context('handling errors'):
+        with context('when the exchange is not declared'):
+            with it('raises RabbitMQNotFoundError'):
+                def callback():
+                    self.rabbitmq_client.publish('NON_EXISTING_EXCHANGE', 'whatever', IRRELEVANT_MESSAGE)
+
+                expect(callback).to(raise_error(rabbitmq.RabbitMQNotFoundError))
+
+        with context('when operating in a not declared queue'):
+            with it('raises RabbitMQError'):
+                def callback():
+                    self.rabbitmq_client.consume(queue='NON_EXISTING_QUEUE')
+
+                expect(callback).to(raise_error(rabbitmq.RabbitMQError))
+
+        with context('when trying to do an operation and the connection is not allowed '):
+            with it('raises RabbitMQError'):
+                broker_uri = 'rabbitmq://WRONGUSER:WRONGPASSWD@localhost:5672/'
+                rabbitmq_client = rabbitmq.RabbitMQClient(broker_uri, serializer=serializers.JsonSerializer())
+                def callback():
+                    rabbitmq_client.exchange_declare(IRRELEVANT_EXCHANGE2, type=rabbitmq.TOPIC)
+
+                expect(callback).to(raise_error(rabbitmq.RabbitMQError))
+
 
 with describe('Rabbitmq client topic specs'):
     with before.each:
@@ -131,7 +157,7 @@ with describe('Rabbitmq client multiple binding specs'):
         self.rabbitmq_client.queue_delete(queue=IRRELEVANT_QUEUE3)
         self.rabbitmq_client.exchange_delete(exchange=IRRELEVANT_EXCHANGE3)
 
-    with fcontext('when receiving from 2 routing keys'):
+    with context('when receiving from 2 routing keys'):
         with it('consumes all messages'):
             self.rabbitmq_client.queue_bind(queue=IRRELEVANT_QUEUE3, exchange=IRRELEVANT_EXCHANGE3, routing_key=IRRELEVANT_ROUTING_KEY1)
             self.rabbitmq_client.queue_bind(queue=IRRELEVANT_QUEUE3, exchange=IRRELEVANT_EXCHANGE3, routing_key=IRRELEVANT_ROUTING_KEY2)

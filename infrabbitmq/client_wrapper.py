@@ -17,6 +17,7 @@ class ClientWrapper(object):
         self.broker_uri = broker_uri
         self._connection = pika.BlockingConnection(pika.URLParameters(self.broker_uri))
         self._channel = self._connection.channel()
+        self._channel.confirm_delivery()
 
     def exchange_declare(self, exchange, type, **kwargs):
         self._channel.exchange_declare(exchange, type, kwargs)
@@ -25,7 +26,7 @@ class ClientWrapper(object):
         self._channel.queue_declare(queue)
 
     def basic_publish(self, exchange, routing_key, body, **kwargs):
-        kk = self._channel.basic_publish(exchange, routing_key, body)
+        self._channel.basic_publish(exchange, routing_key, body, mandatory=True)
 
     def start_consume(self, queue, timeout):
         msg_body = {}
