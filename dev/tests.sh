@@ -3,10 +3,19 @@
 find . -name *.pyc -delete
 source "dev/env_develop"
 echo
-echo "Running tests"
+echo "Running unit tests"
 echo "----------------------------------------------------------------------"
 echo
-nosetests `find . -maxdepth 2 -type d -name "tests" | grep -v systems` --logging-clear-handlers -s "$@"
-NOSE_RETCODE=$?
+mamba -f documentation specs/*
+UNIT_TEST_RETCODE=$?
+if [ $UNIT_TEST_RETCODE != 0 ]
+then
+    exit $UNIT_TEST_RETCODE
+fi
+echo "Running integration tests"
+echo "----------------------------------------------------------------------"
+echo
+$(PWD)/dev/integration-tests.sh
+INTEGRATION_TEST_RETCODE=$?
 
-exit $NOSE_RETCODE
+exit $INTEGRATION_TEST_RETCODE
