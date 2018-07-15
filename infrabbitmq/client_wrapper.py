@@ -20,7 +20,13 @@ class ClientWrapper(object):
         self._channel.confirm_delivery()
 
     def exchange_declare(self, exchange, type, **kwargs):
-        self._channel.exchange_declare(exchange, type, kwargs)
+        self._channel.exchange_declare(exchange=exchange,
+                                       exchange_type=type,
+                                       passive=kwargs.get('passive', False),
+                                       durable=kwargs.get('durable', False),
+                                       auto_delete=kwargs.get('auto_delete', False),
+                                       internal=kwargs.get('internal', False),
+                                       arguments=kwargs.get('arguments', {}))
 
     def queue_declare(self, queue, auto_delete=True, exclusive=False, durable=False, arguments=None):
         self._channel.queue_declare(queue)

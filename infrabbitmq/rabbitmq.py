@@ -42,6 +42,8 @@ class RabbitMQClient(object):
             try:
                 return func(self, *args, **kwargs)
             except pika.exceptions.ChannelClosed as exc:
+                import traceback
+                traceback.print_exc()
                 self._client = None
                 raise RabbitMQNotFoundError(exc)
             except (socket.error, pika.exceptions.AMQPError) as exc:
@@ -150,7 +152,7 @@ class RabbitMQClient(object):
             self._client = None
             raise RabbitMQError(exc)
         except TypeError:
-            pass
+            yield None
 
 
     @raise_rabbitmq_error
@@ -267,7 +269,7 @@ class RabbitMQQueueEventProcessor(object):
                         self.processor.process(self.event_builder(message.body))
                     except Exception:
                         logging.critical("Error processing {message} with exception".format(message=message.body), exc_info=True)
-                if max_iterations and index >= max_iterations:
+                if max_iterations is not None and index >= (max_iterations - 1):
                     return
 
 
