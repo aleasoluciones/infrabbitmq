@@ -5,6 +5,7 @@ import logging
 from functools import wraps
 import socket, select, errno
 from infrabbitmq import events, client_wrapper
+from infrabbitmq.exceptions import RabbitMQError, RabbitMQNotFoundError
 
 DIRECT = 'direct'
 TOPIC = 'topic'
@@ -13,14 +14,6 @@ X_DELAYED = 'x-delayed-message'
 # AMQP topics
 # * (star) can substitute for exactly one word.
 # # (hash) can substitute for zero or more words.
-
-
-class RabbitMQError(Exception):
-    pass
-
-
-class RabbitMQNotFoundError(RabbitMQError):
-    pass
 
 
 class RabbitMQClient(object):

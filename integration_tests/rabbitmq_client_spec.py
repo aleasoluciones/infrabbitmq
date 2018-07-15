@@ -7,6 +7,7 @@ from doublex_expects import *
 import os
 
 from infrabbitmq import rabbitmq, serializers
+from infrabbitmq.exceptions import RabbitMQError, RabbitMQNotFoundError
 
 IRRELEVANT_QUEUE1 = 'irrelevant_queue1'
 IRRELEVANT_QUEUE2 = 'irrelevant_queue2'
@@ -86,14 +87,14 @@ with describe('Rabbitmq client specs'):
                 def callback():
                     self.rabbitmq_client.publish('NON_EXISTING_EXCHANGE', 'whatever', IRRELEVANT_MESSAGE)
 
-                expect(callback).to(raise_error(rabbitmq.RabbitMQNotFoundError))
+                expect(callback).to(raise_error(RabbitMQNotFoundError))
 
         with context('when operating in a not declared queue'):
             with it('raises RabbitMQError'):
                 def callback():
                     self.rabbitmq_client.consume(queue='NON_EXISTING_QUEUE')
 
-                expect(callback).to(raise_error(rabbitmq.RabbitMQError))
+                expect(callback).to(raise_error(RabbitMQError))
 
         with context('when trying to do an operation and the connection is not allowed '):
             with it('raises RabbitMQError'):
@@ -102,7 +103,7 @@ with describe('Rabbitmq client specs'):
                 def callback():
                     rabbitmq_client.exchange_declare(IRRELEVANT_EXCHANGE2, type=rabbitmq.TOPIC)
 
-                expect(callback).to(raise_error(rabbitmq.RabbitMQError))
+                expect(callback).to(raise_error(RabbitMQError))
 
 
 with describe('Rabbitmq client topic specs'):
