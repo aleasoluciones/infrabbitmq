@@ -15,7 +15,7 @@ fi
 echo "Running integration tests"
 echo "----------------------------------------------------------------------"
 echo
-$(PWD)/dev/integration-tests.sh
+dev/integration-tests.sh
 INTEGRATION_TEST_RETCODE=$?
 
 exit $INTEGRATION_TEST_RETCODE
