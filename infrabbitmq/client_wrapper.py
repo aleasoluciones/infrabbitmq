@@ -36,7 +36,8 @@ class ClientWrapper(object):
                                     arguments=arguments)
 
     def basic_publish(self, exchange, routing_key, body, **kwargs):
-        self._channel.basic_publish(exchange, routing_key, body, mandatory=True)
+        properties = pika.spec.BasicProperties(headers=kwargs.get('headers', {}))
+        self._channel.basic_publish(exchange=exchange, routing_key=routing_key, body=body, properties=properties, mandatory=True)
 
     def start_consume(self, queue, timeout):
         msg_body = {}
