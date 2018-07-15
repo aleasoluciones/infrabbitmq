@@ -29,7 +29,11 @@ class ClientWrapper(object):
                                        arguments=kwargs.get('arguments', {}))
 
     def queue_declare(self, queue, auto_delete=True, exclusive=False, durable=False, arguments=None):
-        self._channel.queue_declare(queue)
+        self._channel.queue_declare(queue,
+                                    durable=durable,
+                                    exclusive=exclusive,
+                                    auto_delete=auto_delete,
+                                    arguments=arguments)
 
     def basic_publish(self, exchange, routing_key, body, **kwargs):
         self._channel.basic_publish(exchange, routing_key, body, mandatory=True)
