@@ -20,4 +20,4 @@ install:
 
 script:
   - sleep 20
-  - nosetests tests integration_tests
+  - ./dev/tests.sh
