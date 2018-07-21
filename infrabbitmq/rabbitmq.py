@@ -4,7 +4,11 @@ import logging
 from functools import wraps
 import socket, select, errno
 from infrabbitmq import events, client_wrapper
-from infrabbitmq.exceptions import RabbitMQError, RabbitMQNotFoundError, ChannelClosedError, RabbitMQClientError
+from infrabbitmq.exceptions import (RabbitMQError,
+                                    RabbitMQNotFoundError,
+                                    ChannelClosedError,
+                                    RabbitMQClientError,
+                                    EmptyQueueError)
 
 DIRECT = 'direct'
 TOPIC = 'topic'
@@ -82,7 +86,7 @@ class RabbitMQClient(object):
             message = self.client.start_consume(queue=queue, timeout=timeout)
             message['body'] = self._deserialize(message['body'])
             message = RabbitMQMessage(message)
-        except TypeError:
+        except EmptyQueueError:
             message = None
         self.disconnect()
         return message
@@ -141,7 +145,7 @@ class RabbitMQClient(object):
             logging.critical("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
             self._client = None
             raise RabbitMQError(exc)
-        except TypeError:
+        except EmptyQueueError:
             yield None
 
 
@@ -164,7 +168,7 @@ class RabbitMQQueueIterator(object):
     def __next__(self):
         try:
             message = self.client.start_consume(queue=self.queue, timeout=self.timeout)
-        except TypeError:
+        except EmptyQueueError:
             raise StopIteration()
         try:
             message['body'] = self.deserialize_func(message['body'])

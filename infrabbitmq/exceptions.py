@@ -13,3 +13,6 @@ class ChannelClosedError(RabbitMQError):
 class RabbitMQClientError(RabbitMQError):
     pass
 
+class EmptyQueueError(RabbitMQError):
+    pass
+

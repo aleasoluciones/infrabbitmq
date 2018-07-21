@@ -4,7 +4,7 @@ import pika
 import time
 from functools import wraps
 
-from infrabbitmq.exceptions import ChannelClosedError, RabbitMQError, RabbitMQClientError
+from infrabbitmq.exceptions import ChannelClosedError, RabbitMQError, RabbitMQClientError, EmptyQueueError
 
 
 class ClientWrapper(object):
@@ -71,6 +71,8 @@ class ClientWrapper(object):
             raise ChannelClosedError
         except pika.exceptions.AMQPError as exc:
             raise RabbitMQError(exc)
+        except TypeError:
+            raise EmptyQueueError
         return msg_body
 
     @raise_client_error
