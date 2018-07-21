@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import pika
 import logging
 from functools import wraps
 import socket, select, errno
 from infrabbitmq import events, client_wrapper
-from infrabbitmq.exceptions import RabbitMQError, RabbitMQNotFoundError
+from infrabbitmq.exceptions import RabbitMQError, RabbitMQNotFoundError, ChannelClosedError, RabbitMQClientError
 
 DIRECT = 'direct'
 TOPIC = 'topic'
@@ -34,12 +33,10 @@ class RabbitMQClient(object):
         def wrapper(self, *args, **kwargs):
             try:
                 return func(self, *args, **kwargs)
-            except pika.exceptions.ChannelClosed as exc:
-                import traceback
-                traceback.print_exc()
+            except ChannelClosedError as exc:
                 self._client = None
                 raise RabbitMQNotFoundError(exc)
-            except (socket.error, pika.exceptions.AMQPError) as exc:
+            except (socket.error, RabbitMQClientError) as exc:
                 logging.info("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
                 self._client = None
                 raise RabbitMQError(exc)
@@ -138,9 +135,9 @@ class RabbitMQClient(object):
                     # http://stackoverflow.com/questions/5633067/signal-handling-in-pylons
                     if exc[0] != errno.EINTR:
                         logging.info("Interrupted System Call")
-        except (pika.exceptions.ChannelClosed) as exc:
+        except (ChannelClosedError) as exc:
             raise RabbitMQNotFoundError(exc)
-        except (socket.error, pika.exceptions.AMQPError) as exc:
+        except (socket.error, RabbitMQClientError) as exc:
             logging.critical("Reconnecting, Error rabbitmq %s %s" % (type(exc), exc), exc_info=True)
             self._client = None
             raise RabbitMQError(exc)
@@ -167,8 +164,6 @@ class RabbitMQQueueIterator(object):
     def __next__(self):
         try:
             message = self.client.start_consume(queue=self.queue, timeout=self.timeout)
-        except pika.exceptions.AMQPError as exc:
-            raise RabbitMQError(exc)
         except TypeError:
             raise StopIteration()
         try:

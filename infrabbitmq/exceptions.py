@@ -7,4 +7,9 @@ class RabbitMQError(Exception):
 class RabbitMQNotFoundError(RabbitMQError):
     pass
 
+class ChannelClosedError(RabbitMQError):
+    pass
+
+class RabbitMQClientError(RabbitMQError):
+    pass
 
