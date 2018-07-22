@@ -165,6 +165,9 @@ class RabbitMQQueueIterator(object):
     def __iter__(self):
         return self
 
+    def next(self):
+        return self.__next__()
+
     def __next__(self):
         try:
             message = self.client.start_consume(queue=self.queue, timeout=self.timeout)
