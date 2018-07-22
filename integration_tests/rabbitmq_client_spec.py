@@ -62,7 +62,6 @@ with describe('Rabbitmq client specs'):
             expect(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1).body).to(equal(IRRELEVANT_MESSAGE1))
             expect(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1).body).to(equal(IRRELEVANT_MESSAGE2))
             expect(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1)).to(be_none)
-            assert_that(self.rabbitmq_client.consume(queue=IRRELEVANT_QUEUE1), is_(None))
 
         with it('consumes all pending messages consuming next'):
             self.rabbitmq_client.publish(IRRELEVANT_EXCHANGE1, IRRELEVANT_ROUTING_KEY, IRRELEVANT_MESSAGE1)
