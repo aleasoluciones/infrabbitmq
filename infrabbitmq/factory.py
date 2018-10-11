@@ -4,7 +4,7 @@ from __future__ import absolute_import
 
 import logging
 import os
-import infcommon
+from infcommon.factory import Factory
 from infcommon import clock
 from infrabbitmq import (
     events,
@@ -14,19 +14,19 @@ from infrabbitmq import (
 
 
 def json_serializer():
-    return infcommon.Factory.instance('json_serializer', lambda: serializers.JsonSerializer())
+    return Factory.instance('json_serializer', lambda: serializers.JsonSerializer())
 
 
 def pickle_serializer():
-    return infcommon.Factory.instance('pickle_serializer', lambda: serializers.PickleSerializer())
+    return Factory.instance('pickle_serializer', lambda: serializers.PickleSerializer())
 
 
 def json_or_pickle_serializer():
-    return infcommon.Factory.instance('json_or_pickle_serializer', lambda: serializers.JsonOrPickleSerializer())
+    return Factory.instance('json_or_pickle_serializer', lambda: serializers.JsonOrPickleSerializer())
 
 
 def event_publisher(exchange='events', broker_uri=None):
-    return infcommon.Factory.instance('event_publisher_%s_%s' % (exchange, broker_uri),
+    return Factory.instance('event_publisher_%s_%s' % (exchange, broker_uri),
         lambda: rabbitmq.EventPublisher(
             rabbitmq_client(broker_uri=broker_uri),
             clock.Clock(),
@@ -34,7 +34,7 @@ def event_publisher(exchange='events', broker_uri=None):
     )
 
 def event_publisher_pickle_serializer(exchange='events', broker_uri=None):
-    return infcommon.Factory.instance('event_publisher_pickle_serializer_%s_%s' % (exchange, broker_uri),
+    return Factory.instance('event_publisher_pickle_serializer_%s_%s' % (exchange, broker_uri),
         lambda: rabbitmq.EventPublisher(
             rabbitmq_client(broker_uri=broker_uri, serializer=pickle_serializer()),
             clock.Clock(),
