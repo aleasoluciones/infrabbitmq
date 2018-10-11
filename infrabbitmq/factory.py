@@ -43,7 +43,7 @@ def event_publisher_pickle_serializer(exchange='events', broker_uri=None):
 
 
 def event_publisher_json_serializer(exchange='events', broker_uri=None):
-    return infcommon.Factory.instance('event_publisher_json_serializer{}_{}'.format(exchange, broker_uri),
+    return Factory.instance('event_publisher_json_serializer{}_{}'.format(exchange, broker_uri),
                                       lambda: rabbitmq.EventPublisher(rabbitmq_client(broker_uri=broker_uri, serializer=json_serializer()),
                                                                       clock.Clock(),
                                                                       exchange=exchange)
