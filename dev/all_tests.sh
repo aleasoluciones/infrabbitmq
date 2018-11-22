@@ -6,16 +6,11 @@ echo
 echo "Running unit tests"
 echo "----------------------------------------------------------------------"
 echo
-mamba -f documentation specs/*
-UNIT_TEST_RETCODE=$?
-if [ $UNIT_TEST_RETCODE != 0 ]
-then
-    exit $UNIT_TEST_RETCODE
-fi
+dev/unit_tests.sh
+UNIT_TESTS_RETCODE=$?
 echo "Running integration tests"
 echo "----------------------------------------------------------------------"
 echo
-dev/integration-tests.sh
-INTEGRATION_TEST_RETCODE=$?
-
-exit $INTEGRATION_TEST_RETCODE
+dev/integration_tests.sh
+INTEGRATION_TESTS_RETCODE=$?
+exit $($UNIT_TESTS_RETCODE || $INTEGRATION_TEST_RETCODE)
