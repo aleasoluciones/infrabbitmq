@@ -16,7 +16,7 @@ IRRELEVANT_QUEUE2 = 'irrelevant_queue2'
 IRRELEVANT_QUEUE3 = 'irrelevant_queue3'
 
 IRRELEVANT_EXCHANGE1 = 'irrelevant_exchange11'
-IRRELEVANT_EXCHANGE2  = 'irrelevant_exchange2'
+IRRELEVANT_EXCHANGE2 = 'irrelevant_exchange2'
 IRRELEVANT_EXCHANGE3 = 'irrelevant_exchange3'
 
 
