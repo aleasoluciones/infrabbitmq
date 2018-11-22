@@ -5,9 +5,11 @@ from expects import *
 from doublex_expects import *
 
 import os
+import logging
 
 from infrabbitmq import rabbitmq, serializers
 from infrabbitmq.exceptions import RabbitMQError, RabbitMQNotFoundError
+
 
 IRRELEVANT_QUEUE1 = 'irrelevant_queue1'
 IRRELEVANT_QUEUE2 = 'irrelevant_queue2'
@@ -24,6 +26,9 @@ IRRELEVANT_ROUTING_KEY2 = 'irrelevant_routing_key2'
 IRRELEVANT_MESSAGE = 'irrelevant_message'
 IRRELEVANT_MESSAGE1 = 'irrelevant_message1'
 IRRELEVANT_MESSAGE2 = 'irrelevant_message2'
+
+
+logging.getLogger("pika").setLevel(logging.ERROR)
 
 
 with describe('Rabbitmq client specs'):
