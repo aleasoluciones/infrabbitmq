@@ -21,3 +21,7 @@ install:
 script:
   - sleep 20
   - nosetests tests integration_tests
+
+notifications:
+  email:
+    - bifer@alea-soluciones.com
