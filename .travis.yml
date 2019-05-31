@@ -14,7 +14,6 @@ before_install:
   - docker run -d --hostname infrabbit --name infrabbit -e RABBITMQ_DEFAULT_USER=infrabbit -e RABBITMQ_DEFAULT_PASS=infrabbit -p 15672:15672 -p 5672:5672 aleasoluciones/rabbitmq-delayed-message:0.2
 
 install:
-  - python setup.py develop
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
 
