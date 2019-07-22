@@ -19,7 +19,8 @@ install:
 
 script:
   - sleep 20
-  - nosetests tests integration_tests
+  - ./dev/unit_tests.sh
+  - ./dev/integration_tests_for_travis.sh
 
 notifications:
   email:

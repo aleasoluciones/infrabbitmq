@@ -1,4 +1,4 @@
 #!/bin/bash
 
-dev/tests.sh
-dev/integration-tests.sh
+dev/unit_tests.sh
+dev/integration_tests.sh
