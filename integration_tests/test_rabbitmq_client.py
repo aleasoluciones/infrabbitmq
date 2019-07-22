@@ -5,7 +5,8 @@ from hamcrest import *
 from doublex import *
 import os
 
-from infrabbitmq import rabbitmq, serializers
+from infcommon.serializer import serializers
+from infrabbitmq import rabbitmq
 
 IRRELEVANT_QUEUE1 = 'irrelevant_queue1'
 IRRELEVANT_QUEUE2 = 'irrelevant_queue2'

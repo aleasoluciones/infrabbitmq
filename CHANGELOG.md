@@ -1,3 +1,8 @@
+2019-07-22
+==========
+* [Internal] Use serializer from infcommon instead local serializers
+
+
 2018-05-29
 ==========
 * [Internal] Update factory with a new function to create event_publisher_json_serializer

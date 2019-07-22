@@ -5,7 +5,7 @@ source "dev/env_develop"
 INTEGRATION_TESTS=`find . -maxdepth 2 -type d -name "integration_tests"`
 
 echo "Starting rabbitmq container..."
-docker run -d --hostname infrabbit --name infrabbit -e RABBITMQ_DEFAULT_USER=infrabbit -e RABBITMQ_DEFAULT_PASS=infrabbit -p 15672:15672 -p 5672:5672 aleasoluciones/rabbitmq-delayed-message:0.2
+docker run -d --hostname infrabbit --name infrabbit -e RABBITMQ_DEFAULT_USER=infrabbit -e RABBITMQ_DEFAULT_PASS=infrabbit -p 15679:15672 -p 5679:5672 aleasoluciones/rabbitmq-delayed-message:0.2
 sleep 5
 echo -n "."
 sleep 5
