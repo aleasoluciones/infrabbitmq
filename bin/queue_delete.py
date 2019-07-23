@@ -3,7 +3,7 @@
 import logging
 import argparse
 from infrabbitmq import factory
-import os
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("queue_name")
