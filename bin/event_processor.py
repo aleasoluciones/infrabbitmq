@@ -6,7 +6,11 @@ import sys
 import argparse
 import logging
 
-from infcommon import utils, logging_utils
+from infcommon import (
+    utils,
+    logging_utils,
+)
+from infcommon.serializer import factory as serializer_factory
 
 from infrabbitmq import factory, rabbitmq
 
@@ -105,9 +109,9 @@ def main():
 
         serializer = None
         if args.serialization == 'json':
-            serializer = factory.json_serializer()
+            serializer = serializer_factory.json_serializer()
         if args.serialization == 'pikle':
-            serializer = factory.pickle_serializer()
+            serializer = serializer_factory.pickle_serializer()
 
         exchange_type = rabbitmq.TOPIC
         if args.exchange_type:
