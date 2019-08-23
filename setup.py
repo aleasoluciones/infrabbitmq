@@ -16,5 +16,6 @@ setup(name='infrabbitmq',
       scripts=['bin/event_processor.py',
                'bin/event_publisher.py',
                'bin/queue_delete.py',
-               'bin/queue_unbind.py']
+               'bin/queue_unbind.py',
+               'bin/ticker.py']
       )
