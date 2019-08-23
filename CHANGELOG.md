@@ -1,6 +1,6 @@
 2019-08-23
 ==========
-* [Feature] Add bin/ticker.py. It publish a tick event (1 sg, 1 min, 2 min, 5 min and 60 minutres)
+* [Feature] Add bin/ticker.py. It publish a tick event (1 sg, 1 min, 2 min, 5 min and 60 minutes)
 
 2019-07-22
 ==========
