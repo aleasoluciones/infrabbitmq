@@ -16,7 +16,9 @@ env:
 before_install:
   - sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
   - sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+  - echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USER --password-stdin
   - docker run -d --hostname infrabbit --name infrabbit -e RABBITMQ_DEFAULT_USER=infrabbit -e RABBITMQ_DEFAULT_PASS=infrabbit -p 15672:15672 -p 5672:5672 aleasoluciones/rabbitmq-delayed-message:0.2
+  - docker logout
 
 install:
   - pip install -r requirements.txt
